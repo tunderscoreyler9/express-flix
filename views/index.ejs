@@ -1,40 +1,3 @@
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TMDb Movie Search</title>
-    <link rel="stylesheet" href="/styles.css">
-</head>
-<body>
-    <h1>Search for a Movie</h1>
-    <form action="/" method="GET">
-        <input type="text" name="query" placeholder="Enter movie title">
-        <button type="submit">Search</button>
-    </form>
-
-    <% if (results.length > 0) { %>
-        <h2>Results for "<%= query %>"</h2>
-        <ul>
-            <% results.forEach(movie => { %>
-                <li>
-                    <h3><%= movie.title %></h3>
-                    <p>Release Date: <%= movie.release_date %></p>
-                    <p><%= movie.overview %></p>
-                    <% if (movie.poster_path) { %>
-                        <img src="https://image.tmdb.org/t/p/w185<%= movie.poster_path %>" alt="<%= movie.title %> Poster" style="max-width: 200px; max-height: 300px;">
-                    <% } else { %>
-                        <p>No poster available</p>
-                    <% } %>
-                </li>
-            <% }) %>
-        </ul>
-    <% } else if (query) { %>
-        <p>No results found for "<%= query %>"</p>
-    <% } %>
-</body>
-</html> -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -93,7 +56,8 @@
                 <h2 class="text-2xl font-semibold text-gray-700 mb-6">Results for "<%= query %>"</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <% results.forEach(movie => { %>
-                        <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                        <!-- Updated Movie Card with Link -->
+                        <a href="/movie/<%= movie.id %>?from=<%= encodeURIComponent(query) %>" class="block bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                             <div class="aspect-w-2 aspect-h-3 relative">
                                 <% if (movie.poster_path) { %>
                                     <img 
@@ -112,7 +76,7 @@
                                 <p class="text-sm text-gray-500 mb-3">Release Date: <%= movie.release_date %></p>
                                 <p class="text-gray-600 text-sm line-clamp-3"><%= movie.overview %></p>
                             </div>
-                        </div>
+                        </a>
                     <% }) %>
                 </div>
             <% } else if (query) { %>
