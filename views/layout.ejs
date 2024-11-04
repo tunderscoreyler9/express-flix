@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= typeof title !=='undefined' ? title : 'Movie Search' %>
+    </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+    <!-- Include the navbar -->
+    <%- include('partials/navbar') %>
+
+        <!-- Main content -->
+        <main class="container mx-auto px-4 py-8">
+            <%- body %>
+        </main>
+
+        <!-- Load JavaScript files -->
+        <script src="/js/movieNavigation.js"></script>
+        <script src="/js/search.js"></script>
+</body>
+
+</html>

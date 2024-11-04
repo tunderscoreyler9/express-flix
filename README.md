@@ -58,13 +58,18 @@ To use this application, you'll need a TMDB API key:
 
 ```
 tmdb-express-app/
-├── public/            # Static assets
-│   └── js/           # JavaScript files
-├── views/            # EJS templates
-│   └── index.ejs     # Main search page
-├── .env              # Environment variables
-├── app.js            # Express app entry point
-└── package.json      # Project dependencies
+├── public/
+│   └── js/
+│       ├── movieNavigation.js
+│       └── search.js
+├── views/
+│   ├── partials/
+│   │   └── navbar.ejs
+│   ├── layout.ejs
+│   ├── index.ejs
+│   └── movie-details.ejs
+├── app.js
+└── package.json
 ```
 
 ## Contributing
