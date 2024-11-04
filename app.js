@@ -21,18 +21,43 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Route for the homepage and search functionality
 app.get('/', async (req, res) => {
     const query = req.query.query;
-    if (query) {
-        const url = `https://api.themoviedb.org/3/search/movie?api_key=${process.env.TMDB_API_KEY}&query=${query}`;
-        try {
-            const response = await axios.get(url);
-            const results = response.data.results || [];
-            res.render('index', { query, results });
-        } catch (error) {
-            console.error("Error fetching data:", error);
-            res.render('index', { query, results: [], error: "An error occurred during search." });
+    
+    try {
+        if (query) {
+            // Search functionality remains the same
+            const searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${process.env.TMDB_API_KEY}&query=${query}`;
+            const response = await axios.get(searchUrl);
+            res.render('index', { 
+                query, 
+                results: response.data.results || [],
+                trending: [],
+                topRated: []
+            });
+        } else {
+            // Fetch trending movies
+            const trendingUrl = `https://api.themoviedb.org/3/trending/movie/week?api_key=${process.env.TMDB_API_KEY}`;
+            const trendingResponse = await axios.get(trendingUrl);
+
+            // Fetch top rated movies
+            const topRatedUrl = `https://api.themoviedb.org/3/movie/top_rated?api_key=${process.env.TMDB_API_KEY}&page=1`;
+            const topRatedResponse = await axios.get(topRatedUrl);
+
+            res.render('index', { 
+                query: '', 
+                results: [],
+                trending: trendingResponse.data.results.slice(0, 8), // Show top 8 trending
+                topRated: topRatedResponse.data.results.slice(0, 8)  // Show top 8 rated
+            });
         }
-    } else {
-        res.render('index', { query: '', results: [] });
+    } catch (error) {
+        console.error("Error fetching data:", error);
+        res.render('index', { 
+            query: query || '', 
+            results: [],
+            trending: [],
+            topRated: [],
+            error: "An error occurred while fetching movies." 
+        });
     }
 });
 

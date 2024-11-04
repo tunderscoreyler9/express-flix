@@ -9,9 +9,10 @@
     </div>
 </div>
 
-<!-- Search Results Section -->
+<!-- Content Section -->
 <div id="resultsSection">
     <% if (results.length > 0) { %>
+        <!-- Search Results -->
         <h2 class="text-2xl font-semibold text-gray-700 mb-6">Results for "<%= query %>"</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <% results.forEach(movie => { %>
@@ -39,6 +40,69 @@
     <% } else if (query) { %>
         <div class="text-center py-12">
             <p class="text-lg text-gray-600">No results found for "<%= query %>"</p>
+        </div>
+    <% } else { %>
+        <!-- Homepage Content -->
+        <div class="space-y-12">
+            <!-- Trending Movies Section -->
+            <section>
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Trending Movies</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <% trending.forEach(movie => { %>
+                        <a href="/movie/<%= movie.id %>" 
+                           class="block bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                            <div class="relative">
+                                <% if (movie.poster_path) { %>
+                                    <img src="https://image.tmdb.org/t/p/w500<%= movie.poster_path %>" 
+                                         alt="<%= movie.title %>" 
+                                         class="w-full h-64 object-cover">
+                                    <div class="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-lg text-sm">
+                                        <%= movie.vote_average.toFixed(1) %>
+                                    </div>
+                                <% } else { %>
+                                    <div class="w-full h-64 bg-gray-200 flex items-center justify-center">
+                                        <span class="text-gray-400">No poster available</span>
+                                    </div>
+                                <% } %>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-1"><%= movie.title %></h3>
+                                <p class="text-sm text-gray-500"><%= new Date(movie.release_date).getFullYear() %></p>
+                            </div>
+                        </a>
+                    <% }) %>
+                </div>
+            </section>
+
+            <!-- Top Rated Movies Section -->
+            <section>
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Top Rated Movies</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <% topRated.forEach(movie => { %>
+                        <a href="/movie/<%= movie.id %>" 
+                           class="block bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                            <div class="relative">
+                                <% if (movie.poster_path) { %>
+                                    <img src="https://image.tmdb.org/t/p/w500<%= movie.poster_path %>" 
+                                         alt="<%= movie.title %>" 
+                                         class="w-full h-64 object-cover">
+                                    <div class="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-lg text-sm">
+                                        <%= movie.vote_average.toFixed(1) %>
+                                    </div>
+                                <% } else { %>
+                                    <div class="w-full h-64 bg-gray-200 flex items-center justify-center">
+                                        <span class="text-gray-400">No poster available</span>
+                                    </div>
+                                <% } %>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-1"><%= movie.title %></h3>
+                                <p class="text-sm text-gray-500"><%= new Date(movie.release_date).getFullYear() %></p>
+                            </div>
+                        </a>
+                    <% }) %>
+                </div>
+            </section>
         </div>
     <% } %>
 </div>
