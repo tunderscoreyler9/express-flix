@@ -31,22 +31,26 @@ app.get('/', async (req, res) => {
                 query, 
                 results: response.data.results || [],
                 trending: [],
-                topRated: []
+                topRated: [],
+                upcoming: [],
+                nowPlaying: []
             });
         } else {
-            // Fetch trending movies
-            const trendingUrl = `https://api.themoviedb.org/3/trending/movie/week?api_key=${process.env.TMDB_API_KEY}`;
-            const trendingResponse = await axios.get(trendingUrl);
-
-            // Fetch top rated movies
-            const topRatedUrl = `https://api.themoviedb.org/3/movie/top_rated?api_key=${process.env.TMDB_API_KEY}&page=1`;
-            const topRatedResponse = await axios.get(topRatedUrl);
+            // Fetch all movie categories in parallel for better performance
+            const [trendingResponse, topRatedResponse, upcomingResponse, nowPlayingResponse] = await Promise.all([
+                axios.get(`https://api.themoviedb.org/3/trending/movie/week?api_key=${process.env.TMDB_API_KEY}`),
+                axios.get(`https://api.themoviedb.org/3/movie/top_rated?api_key=${process.env.TMDB_API_KEY}&page=1`),
+                axios.get(`https://api.themoviedb.org/3/movie/upcoming?api_key=${process.env.TMDB_API_KEY}`),
+                axios.get(`https://api.themoviedb.org/3/movie/now_playing?api_key=${process.env.TMDB_API_KEY}`)
+            ]);
 
             res.render('index', { 
                 query: '', 
                 results: [],
-                trending: trendingResponse.data.results.slice(0, 8), // Show top 8 trending
-                topRated: topRatedResponse.data.results.slice(0, 8)  // Show top 8 rated
+                trending: trendingResponse.data.results.slice(0, 6),     // Show top 6 trending
+                topRated: topRatedResponse.data.results.slice(0, 6),     // Show top 6 rated
+                upcoming: upcomingResponse.data.results.slice(0, 6),     // Show top 6 upcoming
+                nowPlaying: nowPlayingResponse.data.results.slice(0, 6)  // Show top 6 now playing
             });
         }
     } catch (error) {
@@ -56,6 +60,8 @@ app.get('/', async (req, res) => {
             results: [],
             trending: [],
             topRated: [],
+            upcoming: [],
+            nowPlaying: [],
             error: "An error occurred while fetching movies." 
         });
     }
