@@ -1,7 +1,4 @@
-/**
- * DOM Elements used throughout the search functionality
- * @type {HTMLElement}
- */
+// Search functionality with proper error handling and loading states
 const searchForm = document.getElementById('searchForm');
 const searchInput = document.getElementById('searchInput');
 const loadingState = document.getElementById('loadingState');
@@ -12,10 +9,7 @@ const searchButton = document.getElementById('searchButton');
 searchForm.addEventListener('submit', handleSearch);
 window.addEventListener('popstate', handleHistoryNavigation);
 
-/**
- * Initializes the search input value from URL parameters on page load
- * This ensures the search input reflects the current URL state
- */
+// Initialize search input from URL if present
 document.addEventListener('DOMContentLoaded', () => {
     const currentUrl = new URL(window.location.href);
     const searchTerm = currentUrl.searchParams.get('query');
@@ -24,12 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-/**
- * Handles the search form submission and performs the search operation
- * Updates the URL, fetches search results, and updates the page content
- * @param {Event} e - The submit event object
- * @returns {Promise<void>}
- */
 async function handleSearch(e) {
     if (e) {
         e.preventDefault();
@@ -38,8 +26,10 @@ async function handleSearch(e) {
     const searchTerm = searchInput.value.trim();
     
     if (!searchTerm) {
+        showErrorMessage('Please enter a search term');
         return;
     }
+
     showLoadingState();
     
     try {
@@ -52,19 +42,24 @@ async function handleSearch(e) {
             window.history.pushState({ searchTerm }, '', searchUrl);
         }
         
-        // Fetch search results
-        const response = await fetch(searchUrl);
+        // Fetch search results with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+        const response = await fetch(searchUrl, {
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
         
         if (!response.ok) {
-            throw new Error('Search request failed');
+            throw new Error(`Search failed with status: ${response.status}`);
         }
         
-        // Update page content
         const html = await response.text();
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
         
-        // Update results section
         const newResultsSection = doc.getElementById('resultsSection');
         if (newResultsSection) {
             resultsSection.innerHTML = newResultsSection.innerHTML;
@@ -74,37 +69,69 @@ async function handleSearch(e) {
         
     } catch (error) {
         console.error('Search error:', error);
-        showErrorMessage('An error occurred while searching. Please try again.');
+        if (error.name === 'AbortError') {
+            showErrorMessage('Search timed out. Please try again.');
+        } else {
+            showErrorMessage('An error occurred while searching. Please try again.');
+        }
     } finally {
         hideLoadingState();
     }
 }
 
-/**
- * Handles browser back/forward navigation events
- * Updates the search input and results based on the URL state
- * @param {PopStateEvent} event - The popstate event object
- */
+function showErrorMessage(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
+    errorDiv.innerHTML = `
+        <span class="block sm:inline">${message}</span>
+        <button class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()">
+            <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                <title>Close</title>
+                <path d="M14.348 14.849a1 1 0 01-1.414 0L10 11.414l-2.93 2.93a1 1 0 01-1.414-1.414l2.93-2.93-2.93-2.93a1 1 0 011.414-1.414l2.93 2.93 2.93-2.93a1 1 0 011.414 1.414l-2.93 2.93 2.93 2.93a1 1 0 010 1.414z"/>
+            </svg>
+        </button>
+    `;
+    document.body.appendChild(errorDiv);
+    setTimeout(() => errorDiv.remove(), 5000); // Remove after 5 seconds
+}
+
+function showLoadingState() {
+    loadingState.classList.remove('hidden');
+    resultsSection.classList.add('opacity-50');
+    disableSearchButton();
+}
+
+function hideLoadingState() {
+    loadingState.classList.add('hidden');
+    resultsSection.classList.remove('opacity-50');
+    enableSearchButton();
+}
+
+function disableSearchButton() {
+    searchButton.disabled = true;
+    searchButton.classList.add('opacity-75');
+}
+
+function enableSearchButton() {
+    searchButton.disabled = false;
+    searchButton.classList.remove('opacity-75');
+}
+
+// Handle browser back/forward navigation
 function handleHistoryNavigation(event) {
     const currentUrl = new URL(window.location.href);
     const searchTerm = currentUrl.searchParams.get('query');
     
-    // Update search input
     searchInput.value = searchTerm || '';
     
     if (searchTerm) {
-        // Perform search with term from URL
         handleSearch();
     } else {
-        // Return to homepage state
         resetToHomepage();
     }
 }
 
-/**
- * Resets the page to its homepage state
- * Fetches the homepage content and updates the results section
- */
+// Reset to homepage state
 function resetToHomepage() {
     showLoadingState();
     
@@ -125,52 +152,4 @@ function resetToHomepage() {
         .finally(() => {
             hideLoadingState();
         });
-}
-
-/**
- * Shows the loading state UI
- * Displays the loading spinner and disables the search button
- */
-function showLoadingState() {
-    loadingState.classList.remove('hidden');
-    resultsSection.classList.add('opacity-50');
-    disableSearchButton();
-}
-
-/**
- * Hides the loading state UI
- * Removes the loading spinner and enables the search button
- */
-function hideLoadingState() {
-    loadingState.classList.add('hidden');
-    resultsSection.classList.remove('opacity-50');
-    enableSearchButton();
-}
-
-/**
- * Disables the search button and adds visual feedback
- */
-function disableSearchButton() {
-    searchButton.disabled = true;
-    searchButton.classList.add('opacity-75');
-}
-
-/**
- * Enables the search button and removes visual feedback
- */
-function enableSearchButton() {
-    searchButton.disabled = false;
-    searchButton.classList.remove('opacity-75');
-}
-
-/**
- * Displays an error message to the user
- * @param {string} message - The error message to display
- */
-function showErrorMessage(message) {
-    resultsSection.innerHTML = `
-        <div class="text-center py-12">
-            <p class="text-lg text-red-600">${message}</p>
-        </div>
-    `;
 }

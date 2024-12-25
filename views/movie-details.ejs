@@ -1,149 +1,129 @@
-<!DOCTYPE html>
-<html lang="en">
+<!-- Smart Back Button with Context -->
+<div class="container mx-auto px-4 py-8">
+    <button onclick="handleBackNavigation('<%= searchQuery %>')"
+        class="inline-flex items-center text-blue-500 hover:text-blue-600 mb-6 cursor-pointer">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <% if (searchQuery) { %>
+            <span>Back to "<%= searchQuery %>" results</span>
+        <% } else { %>
+            <span>Back</span>
+        <% } %>
+    </button>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>
-        <%= movie.title %> - Movie Details
-    </title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-
-<body class="bg-gray-100 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
-        <!-- Smart Back Button with Context -->
-        <button onclick="handleBackNavigation('<%= searchQuery %>')"
-            class="inline-flex items-center text-blue-500 hover:text-blue-600 mb-6 cursor-pointer">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            <% if (searchQuery) { %>
-                <span>Back to "<%= searchQuery %>" results</span>
+    <!-- Movie Header -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="md:flex">
+            <!-- Movie Poster -->
+            <div class="md:flex-shrink-0">
+                <% if (movie.poster_path) { %>
+                    <img class="h-96 w-full md:w-96 object-cover"
+                        src="https://image.tmdb.org/t/p/w500<%= movie.poster_path %>"
+                        alt="<%= movie.title %> Poster">
                 <% } else { %>
-                    <span>Back</span>
+                    <div class="h-96 w-full md:w-96 bg-gray-200 flex items-center justify-center">
+                        <span class="text-gray-400">No poster available</span>
+                    </div>
+                <% } %>
+            </div>
+
+            <!-- Movie Info -->
+            <div class="p-8">
+                <div class="flex items-center">
+                    <h1 class="text-3xl font-bold text-gray-900">
+                        <%= movie.title %>
+                    </h1>
+                    <% if (movie.vote_average) { %>
+                        <span class="ml-4 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                            <%= movie.vote_average.toFixed(1) %>/10
+                        </span>
                     <% } %>
-        </button>
-
-        <!-- Movie Header -->
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-            <div class="md:flex">
-                <!-- Movie Poster -->
-                <div class="md:flex-shrink-0">
-                    <% if (movie.poster_path) { %>
-                        <img class="h-96 w-full md:w-96 object-cover"
-                            src="https://image.tmdb.org/t/p/w500<%= movie.poster_path %>"
-                            alt="<%= movie.title %> Poster">
-                        <% } else { %>
-                            <div class="h-96 w-full md:w-96 bg-gray-200 flex items-center justify-center">
-                                <span class="text-gray-400">No poster available</span>
-                            </div>
-                            <% } %>
                 </div>
 
-                <!-- Movie Info -->
-                <div class="p-8">
-                    <div class="flex items-center">
-                        <h1 class="text-3xl font-bold text-gray-900">
-                            <%= movie.title %>
-                        </h1>
-                        <% if (movie.vote_average) { %>
-                            <span class="ml-4 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                                <%= movie.vote_average.toFixed(1) %>/10
-                            </span>
-                            <% } %>
+                <div class="mt-2 text-gray-600">
+                    <%= movie.release_date ? new Date(movie.release_date).getFullYear() : 'Release date unknown' %>
+                    • <%= movie.runtime %> min
+                    • <%= movie.genres.map(genre => genre.name).join(', ') %>
+                </div>
+
+                <p class="mt-4 text-gray-600">
+                    <%= movie.overview %>
+                </p>
+
+                <!-- Additional Details -->
+                <div class="mt-6 grid grid-cols-2 gap-4">
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900">Status</h2>
+                        <p class="text-gray-600">
+                            <%= movie.status %>
+                        </p>
                     </div>
-
-                    <div class="mt-2 text-gray-600">
-                        <%= movie.release_date ? new Date(movie.release_date).getFullYear() : 'Release date unknown' %>
-                            • <%= movie.runtime %> min
-                                • <%= movie.genres.map(genre=> genre.name).join(', ') %>
-                    </div>
-
-                    <p class="mt-4 text-gray-600">
-                        <%= movie.overview %>
-                    </p>
-
-                    <!-- Additional Details -->
-                    <div class="mt-6 grid grid-cols-2 gap-4">
-                        <div>
-                            <h2 class="text-lg font-semibold text-gray-900">Status</h2>
-                            <p class="text-gray-600">
-                                <%= movie.status %>
-                            </p>
-                        </div>
-                        <div>
-                            <h2 class="text-lg font-semibold text-gray-900">Budget</h2>
-                            <p class="text-gray-600">
-                                <%= movie.budget ? `$${(movie.budget/1000000).toFixed(1)}M` : 'Not available' %>
-                            </p>
-                        </div>
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900">Budget</h2>
+                        <p class="text-gray-600">
+                            <%= movie.budget ? `$${(movie.budget/1000000).toFixed(1)}M` : 'Not available' %>
+                        </p>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Cast Section -->
-        <div class="mt-8">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">Top Cast</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                <% movie.credits.cast.slice(0, 6).forEach(person=> { %>
-                    <div class="bg-white rounded-lg shadow overflow-hidden">
-                        <% if (person.profile_path) { %>
-                            <img class="w-full h-48 object-cover"
-                                src="https://image.tmdb.org/t/p/w185<%= person.profile_path %>"
-                                alt="<%= person.name %>">
-                            <% } else { %>
-                                <div class="w-full h-48 bg-gray-200 flex items-center justify-center">
-                                    <span class="text-gray-400">No image</span>
-                                </div>
-                                <% } %>
-                                    <div class="p-4">
-                                        <h3 class="font-semibold text-gray-900">
-                                            <%= person.name %>
-                                        </h3>
-                                        <p class="text-sm text-gray-600">
-                                            <%= person.character %>
-                                        </p>
-                                    </div>
-                    </div>
-                    <% }) %>
-            </div>
-        </div>
-
-        <!-- Similar Movies -->
-        <div class="mt-8">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">Similar Movies</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <% movie.similar.forEach(similar=> { %>
-                    <a href="/movie/<%= similar.id %>"
-                        class="bg-white rounded-lg shadow overflow-hidden hover:shadow-lg transition-shadow">
-                        <% if (similar.poster_path) { %>
-                            <img class="w-full h-64 object-cover"
-                                src="https://image.tmdb.org/t/p/w342<%= similar.poster_path %>"
-                                alt="<%= similar.title %>">
-                            <% } else { %>
-                                <div class="w-full h-64 bg-gray-200 flex items-center justify-center">
-                                    <span class="text-gray-400">No poster</span>
-                                </div>
-                                <% } %>
-                                    <div class="p-4">
-                                        <h3 class="font-semibold text-gray-900">
-                                            <%= similar.title %>
-                                        </h3>
-                                        <p class="text-sm text-gray-600">
-                                            <%= similar.release_date ? new Date(similar.release_date).getFullYear()
-                                                : 'TBA' %>
-                                        </p>
-                                    </div>
-                    </a>
-                    <% }) %>
             </div>
         </div>
     </div>
 
-    <!-- Load JavaScript files -->
-    <script src="/js/movieNavigation.js"></script>
-</body>
+    <!-- Cast Section -->
+    <div class="mt-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Top Cast</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <% movie.credits.cast.slice(0, 6).forEach(person => { %>
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <% if (person.profile_path) { %>
+                        <img class="w-full h-48 object-cover"
+                            src="https://image.tmdb.org/t/p/w185<%= person.profile_path %>"
+                            alt="<%= person.name %>">
+                    <% } else { %>
+                        <div class="w-full h-48 bg-gray-200 flex items-center justify-center">
+                            <span class="text-gray-400">No image</span>
+                        </div>
+                    <% } %>
+                    <div class="p-4">
+                        <h3 class="font-semibold text-gray-900">
+                            <%= person.name %>
+                        </h3>
+                        <p class="text-sm text-gray-600">
+                            <%= person.character %>
+                        </p>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    </div>
 
-</html>
+    <!-- Similar Movies -->
+    <div class="mt-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Similar Movies</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <% movie.similar.forEach(similar => { %>
+                <a href="/movie/<%= similar.id %>"
+                    class="bg-white rounded-lg shadow overflow-hidden hover:shadow-lg transition-shadow">
+                    <% if (similar.poster_path) { %>
+                        <img class="w-full h-64 object-cover"
+                            src="https://image.tmdb.org/t/p/w342<%= similar.poster_path %>"
+                            alt="<%= similar.title %>">
+                    <% } else { %>
+                        <div class="w-full h-64 bg-gray-200 flex items-center justify-center">
+                            <span class="text-gray-400">No poster</span>
+                        </div>
+                    <% } %>
+                    <div class="p-4">
+                        <h3 class="font-semibold text-gray-900">
+                            <%= similar.title %>
+                        </h3>
+                        <p class="text-sm text-gray-600">
+                            <%= similar.release_date ? new Date(similar.release_date).getFullYear() : 'TBA' %>
+                        </p>
+                    </div>
+                </a>
+            <% }) %>
+        </div>
+    </div>
+</div>
