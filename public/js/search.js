@@ -33,9 +33,18 @@ async function handleSearch(e) {
     showLoadingState();
     
     try {
-        // Update URL with search term
-        const searchUrl = new URL(window.location.href);
+        // Check if we're on the movie details page
+        const isMovieDetailsPage = window.location.pathname.startsWith('/movie/');
+        
+        // Create the search URL
+        const searchUrl = new URL('/', window.location.origin);
         searchUrl.searchParams.set('query', searchTerm);
+
+        if (isMovieDetailsPage) {
+            // If on movie details, redirect to home with search query
+            window.location.href = searchUrl.toString();
+            return;
+        }
         
         // Only update history if this wasn't triggered by popstate
         if (e && e.type === 'submit') {
@@ -92,29 +101,41 @@ function showErrorMessage(message) {
         </button>
     `;
     document.body.appendChild(errorDiv);
-    setTimeout(() => errorDiv.remove(), 5000); // Remove after 5 seconds
+    setTimeout(() => errorDiv.remove(), 5000);
 }
 
 function showLoadingState() {
-    loadingState.classList.remove('hidden');
-    resultsSection.classList.add('opacity-50');
+    if (loadingState) {
+        loadingState.classList.remove('hidden');
+    }
+    if (resultsSection) {
+        resultsSection.classList.add('opacity-50');
+    }
     disableSearchButton();
 }
 
 function hideLoadingState() {
-    loadingState.classList.add('hidden');
-    resultsSection.classList.remove('opacity-50');
+    if (loadingState) {
+        loadingState.classList.add('hidden');
+    }
+    if (resultsSection) {
+        resultsSection.classList.remove('opacity-50');
+    }
     enableSearchButton();
 }
 
 function disableSearchButton() {
-    searchButton.disabled = true;
-    searchButton.classList.add('opacity-75');
+    if (searchButton) {
+        searchButton.disabled = true;
+        searchButton.classList.add('opacity-75');
+    }
 }
 
 function enableSearchButton() {
-    searchButton.disabled = false;
-    searchButton.classList.remove('opacity-75');
+    if (searchButton) {
+        searchButton.disabled = false;
+        searchButton.classList.remove('opacity-75');
+    }
 }
 
 // Handle browser back/forward navigation
