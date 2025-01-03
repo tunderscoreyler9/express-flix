@@ -104,6 +104,31 @@ app.get('/movie/:id', async (req, res) => {
     }
 });
 
+// New route for actor details
+app.get('/actor/:id', async (req, res) => {
+    try {
+        const actorId = req.params.id;
+        
+        // Fetch actor details
+        const actorUrl = `https://api.themoviedb.org/3/person/${actorId}?api_key=${process.env.TMDB_API_KEY}`;
+        const actorResponse = await axios.get(actorUrl);
+        
+        // Fetch actor credits
+        const creditsUrl = `https://api.themoviedb.org/3/person/${actorId}/combined_credits?api_key=${process.env.TMDB_API_KEY}`;
+        const creditsResponse = await axios.get(creditsUrl);
+
+        res.render('actor-details', { 
+            actor: actorResponse.data,
+            credits: creditsResponse.data.cast.slice(0, 6)
+        });
+    } catch (error) {
+        console.error("Error fetching actor details:", error);
+        res.status(404).render('error', { 
+            message: "Actor not found or error occurred" 
+        });
+    }
+});
+
 // Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
