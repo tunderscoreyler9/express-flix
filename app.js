@@ -105,29 +105,81 @@ app.get('/movie/:id', async (req, res) => {
 });
 
 // New route for actor details
+// app.get('/actor/:id', async (req, res) => {
+//     try {
+//         const actorId = req.params.id;
+        
+//         // Fetch actor details
+//         const actorUrl = `https://api.themoviedb.org/3/person/${actorId}?api_key=${process.env.TMDB_API_KEY}`;
+//         const actorResponse = await axios.get(actorUrl);
+        
+//         // Fetch actor credits
+//         const creditsUrl = `https://api.themoviedb.org/3/person/${actorId}/combined_credits?api_key=${process.env.TMDB_API_KEY}`;
+//         const creditsResponse = await axios.get(creditsUrl);
+
+//         res.render('actor-details', { 
+//             actor: actorResponse.data,
+//             credits: creditsResponse.data.cast.slice(0, 6)
+//         });
+//     } catch (error) {
+//         console.error("Error fetching actor details:", error);
+//         res.status(404).render('error', { 
+//             message: "Actor not found or error occurred" 
+//         });
+//     }
+// });
 app.get('/actor/:id', async (req, res) => {
     try {
         const actorId = req.params.id;
         
-        // Fetch actor details
-        const actorUrl = `https://api.themoviedb.org/3/person/${actorId}?api_key=${process.env.TMDB_API_KEY}`;
-        const actorResponse = await axios.get(actorUrl);
-        
-        // Fetch actor credits
-        const creditsUrl = `https://api.themoviedb.org/3/person/${actorId}/combined_credits?api_key=${process.env.TMDB_API_KEY}`;
-        const creditsResponse = await axios.get(creditsUrl);
+        // Fetch data in parallel for better performance
+        const [actorResponse, creditsResponse, imagesResponse] = await Promise.all([
+            // Basic actor details
+            axios.get(`https://api.themoviedb.org/3/person/${actorId}?api_key=${process.env.TMDB_API_KEY}`),
+            
+            // Actor's movie credits
+            axios.get(`https://api.themoviedb.org/3/person/${actorId}/combined_credits?api_key=${process.env.TMDB_API_KEY}`),
+            
+            // Actor's images
+            axios.get(`https://api.themoviedb.org/3/person/${actorId}/images?api_key=${process.env.TMDB_API_KEY}`)
+        ]);
 
-        res.render('actor-details', { 
-            actor: actorResponse.data,
-            credits: creditsResponse.data.cast.slice(0, 6)
+        // Combine all data for easy access in the template
+        const actorData = {
+            ...actorResponse.data,
+            credits: creditsResponse.data,
+            images: imagesResponse.data,
+            // Calculate age if birthday exists
+            age: actorResponse.data.birthday ? 
+                 calculateAge(new Date(actorResponse.data.birthday)) : 
+                 null
+        };
+
+        // Sort movies by popularity (most popular first)
+        actorData.credits.cast = actorData.credits.cast.sort((a, b) => 
+            b.popularity - a.popularity
+        );
+
+        res.render('actor-details', {
+            actor: actorData,
+            title: `${actorData.name} - Actor Details`
         });
+
     } catch (error) {
         console.error("Error fetching actor details:", error);
-        res.status(404).render('error', { 
-            message: "Actor not found or error occurred" 
+        res.status(404).render('error', {
+            message: "Actor not found or error occurred",
+            title: "Error"
         });
     }
 });
+
+// Helper function to calculate age
+function calculateAge(birthday) {
+    const ageDifMs = Date.now() - birthday.getTime();
+    const ageDate = new Date(ageDifMs);
+    return Math.abs(ageDate.getUTCFullYear() - 1970);
+}
 
 // Start the server
 app.listen(PORT, () => {
