@@ -119,51 +119,22 @@ app.get('/movie/:id', async (req, res) => {
 app.get('/actor/:id', async (req, res) => {
     try {
         const actorId = req.params.id;
-        // Get the search query from the referrer or query parameter
+        // Get the search query from the referrer or the query paramter itself
         const searchQuery = req.query.from || '';
-        
-        // Fetch data in parallel for better performance
-        const [actorResponse, creditsResponse, imagesResponse] = await Promise.all([
-            // Basic actor details
-            axios.get(`https://api.themoviedb.org/3/person/${actorId}?api_key=${process.env.TMDB_API_KEY}`),
-            
-            // Actor's movie credits
-            axios.get(`https://api.themoviedb.org/3/person/${actorId}/combined_credits?api_key=${process.env.TMDB_API_KEY}`),
-            
-            // Actor's images
-            axios.get(`https://api.themoviedb.org/3/person/${actorId}/images?api_key=${process.env.TMDB_API_KEY}`)
-        ]);
-
-        // Combine all data for easy access in the template
-        const actorData = {
-            ...actorResponse.data,
-            credits: creditsResponse.data,
-            images: imagesResponse.data,
-            // Calculate age if birthday exists
-            age: actorResponse.data.birthday ? 
-                 calculateAge(new Date(actor.birthday)) : 
-                 null
-        };
-
-        // Sort movies by popularity (most popular first)
-        actorData.credits.cast = actorData.credits.cast.sort((a, b) => 
-            b.popularity - a.popularity
-        );
-
-        res.render('actor-details', {
-            actor: actorData,
-            searchQuery, // Pass the search query to the template
-            title: `${actorData.name} - Actor Details`
-        });
-
-    } catch (error) {
-        console.error("Error fetching actor details:", error);
+    }
+    catch (error) {
+        console.error("Error fethcing actor details:", error);
         res.status(404).render('error', {
             message: "Actor not found or error occurred",
             title: "Error"
         });
     }
 });
+
+
+
+
+
 
 // Helper function to calculate age
 function calculateAge(birthday) {
