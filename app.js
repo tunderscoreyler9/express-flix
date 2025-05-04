@@ -21,7 +21,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Route for the homepage and search functionality
 app.get('/', async (req, res) => {
     const query = req.query.query;
-    const searchType = req.query.query || 'movie'; // Default to movie search (opposed to 'actor').
+    const searchType = req.query.searchType || 'movie'; // Default to movie search
     
     try {
         if (query) {
@@ -32,8 +32,9 @@ app.get('/', async (req, res) => {
             } else {
                 searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${process.env.TMDB_API_KEY}&query=${query}`;
             }
-
+            
             const response = await axios.get(searchUrl);
+            
             res.render('index', { 
                 query, 
                 searchType,
@@ -43,7 +44,6 @@ app.get('/', async (req, res) => {
                 upcoming: [],
                 nowPlaying: []
             });
-
         } else {
             // Fetch all movie categories in parallel for better performance
             const [trendingResponse, topRatedResponse, upcomingResponse, nowPlayingResponse] = await Promise.all([
@@ -78,7 +78,7 @@ app.get('/', async (req, res) => {
     }
 });
 
-// New route for movie details
+// Route for movie details
 app.get('/movie/:id', async (req, res) => {
     try {
         const movieId = req.params.id;
@@ -105,12 +105,14 @@ app.get('/movie/:id', async (req, res) => {
 
         res.render('movie-details', { 
             movie: movieData,
-            searchQuery // Pass the search query to the template
+            searchQuery, // Pass the search query to the template
+            title: `${movieData.title} - Movie Details`
         });
     } catch (error) {
         console.error("Error fetching movie details:", error);
         res.status(404).render('error', { 
-            message: "Movie not found or error occurred" 
+            message: "Movie not found or error occurred",
+            title: "Error"
         });
     }
 });
@@ -119,54 +121,51 @@ app.get('/movie/:id', async (req, res) => {
 app.get('/actor/:id', async (req, res) => {
     try {
         const actorId = req.params.id;
-        // Get the search query from the referrer or the query paramter itself
+        // Get the search query from the referrer or query parameter
         const searchQuery = req.query.from || '';
-
-        // Fetch actor data in parallel for best performance:
+        
+        // Fetch data in parallel for better performance
         const [actorResponse, creditsResponse, imagesResponse] = await Promise.all([
-            // Actor's actor details
+            // Basic actor details
             axios.get(`https://api.themoviedb.org/3/person/${actorId}?api_key=${process.env.TMDB_API_KEY}`),
-
+            
             // Actor's movie credits
             axios.get(`https://api.themoviedb.org/3/person/${actorId}/combined_credits?api_key=${process.env.TMDB_API_KEY}`),
-
+            
             // Actor's images
             axios.get(`https://api.themoviedb.org/3/person/${actorId}/images?api_key=${process.env.TMDB_API_KEY}`)
         ]);
 
-        // Combine all data for easy access in the template:
+        // Combine all data for easy access in the template
         const actorData = {
             ...actorResponse.data,
             credits: creditsResponse.data,
             images: imagesResponse.data,
-            // Calculate the actor's age if their bday is posted
-            age: actorResponse.data.birthday ? calculateAge(new Date(actorResponse.data/birthday)) : null
+            // Calculate age if birthday exists
+            age: actorResponse.data.birthday ? 
+                 calculateAge(new Date(actorResponse.data.birthday)) : 
+                 null
         };
 
-        // Categorise movies by popularity, with the most popular first:
-        actorData.credits.cast = actorData.credits.cast.sort((a, b) =>
+        // Sort movies by popularity (most popular first)
+        actorData.credits.cast = actorData.credits.cast.sort((a, b) => 
             b.popularity - a.popularity
         );
 
         res.render('actor-details', {
             actor: actorData,
-            searchQuery, // Pass the query to the ejs template
+            searchQuery, // Pass the search query to the template
             title: `${actorData.name} - Actor Details`
         });
 
     } catch (error) {
-        console.error("Error fethcing actor details:", error);
+        console.error("Error fetching actor details:", error);
         res.status(404).render('error', {
             message: "Actor not found or error occurred",
             title: "Error"
         });
     }
 });
-
-
-
-
-
 
 // Helper function to calculate age
 function calculateAge(birthday) {

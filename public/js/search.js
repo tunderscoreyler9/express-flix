@@ -1,6 +1,7 @@
 // Search functionality with proper error handling and loading states
 const searchForm = document.getElementById('searchForm');
 const searchInput = document.getElementById('searchInput');
+const searchTypeSelect = document.querySelector('select[name="searchType"]');
 const loadingState = document.getElementById('loadingState');
 const resultsSection = document.getElementById('resultsSection');
 const searchButton = document.getElementById('searchButton');
@@ -13,26 +14,24 @@ window.addEventListener('popstate', handleHistoryNavigation);
 document.addEventListener('DOMContentLoaded', () => {
     const currentUrl = new URL(window.location.href);
     const searchTerm = currentUrl.searchParams.get('query');
+    const searchType = currentUrl.searchParams.get('searchType');
+    
     if (searchTerm) {
         searchInput.value = searchTerm;
     }
+    
+    if (searchType && searchTypeSelect) {
+        searchTypeSelect.value = searchType;
+    }
 });
 
-
-/**
- * Handles the search form submission event
- * Prevents default form behavior, processes search term, and fetches results
- * Updates UI to show loading state and results, and manages browser history
- * 
- * @param {Event} e - The form submission event object (can be null if called programmatically)
- * @returns {Promise<void>}
- */
 async function handleSearch(e) {
     if (e) {
         e.preventDefault();
     }
     
     const searchTerm = searchInput.value.trim();
+    const searchType = searchTypeSelect ? searchTypeSelect.value : 'movie';
     
     if (!searchTerm) {
         showErrorMessage('Please enter a search term');
@@ -42,22 +41,24 @@ async function handleSearch(e) {
     showLoadingState();
     
     try {
-        // Check if we're on the movie details page
-        const isMovieDetailsPage = window.location.pathname.startsWith('/movie/');
+        // Check if we're on the movie or actor details page
+        const isDetailsPage = window.location.pathname.startsWith('/movie/') || 
+                              window.location.pathname.startsWith('/actor/');
         
         // Create the search URL
         const searchUrl = new URL('/', window.location.origin);
         searchUrl.searchParams.set('query', searchTerm);
+        searchUrl.searchParams.set('searchType', searchType);
 
-        if (isMovieDetailsPage) {
-            // If on movie details, redirect to home with search query
+        if (isDetailsPage) {
+            // If on details page, redirect to home with search query
             window.location.href = searchUrl.toString();
             return;
         }
         
         // Only update history if this wasn't triggered by popstate
         if (e && e.type === 'submit') {
-            window.history.pushState({ searchTerm }, '', searchUrl);
+            window.history.pushState({ searchTerm, searchType }, '', searchUrl);
         }
         
         // Fetch search results with timeout
@@ -97,13 +98,6 @@ async function handleSearch(e) {
     }
 }
 
-
-/**
- * Displays an error message to the user in a dismissible notification
- * Creates a temporary notification that automatically disappears after 5 seconds
- * 
- * @param {string} message - The error message to display to the user
- */
 function showErrorMessage(message) {
     const errorDiv = document.createElement('div');
     errorDiv.className = 'fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
@@ -120,12 +114,6 @@ function showErrorMessage(message) {
     setTimeout(() => errorDiv.remove(), 5000);
 }
 
-
-/**
- * Shows the loading state UI elements
- * Makes the loading indicator visible, reduces opacity of results section,
- * and disables the search button to prevent multiple submissions
- */
 function showLoadingState() {
     if (loadingState) {
         loadingState.classList.remove('hidden');
@@ -136,12 +124,6 @@ function showLoadingState() {
     disableSearchButton();
 }
 
-
-/**
- * Hides the loading state UI elements
- * Hides the loading indicator, restores normal opacity to results section,
- * and re-enables the search button
- */
 function hideLoadingState() {
     if (loadingState) {
         loadingState.classList.add('hidden');
@@ -152,11 +134,6 @@ function hideLoadingState() {
     enableSearchButton();
 }
 
-
-/**
- * Disables the search button to prevent multiple submissions
- * Adds opacity to provide visual feedback that the button is disabled
- */
 function disableSearchButton() {
     if (searchButton) {
         searchButton.disabled = true;
@@ -164,11 +141,6 @@ function disableSearchButton() {
     }
 }
 
-
-/**
- * Re-enables the search button after search operation completes
- * Removes opacity to indicate button is clickable again
- */
 function enableSearchButton() {
     if (searchButton) {
         searchButton.disabled = false;
@@ -176,16 +148,17 @@ function enableSearchButton() {
     }
 }
 
-
-/**
- * Re-enables the search button after search operation completes
- * Removes opacity to indicate button is clickable again
- */
+// Handle browser back/forward navigation
 function handleHistoryNavigation(event) {
     const currentUrl = new URL(window.location.href);
     const searchTerm = currentUrl.searchParams.get('query');
+    const searchType = currentUrl.searchParams.get('searchType');
     
     searchInput.value = searchTerm || '';
+    
+    if (searchTypeSelect && searchType) {
+        searchTypeSelect.value = searchType;
+    }
     
     if (searchTerm) {
         handleSearch();
@@ -194,12 +167,7 @@ function handleHistoryNavigation(event) {
     }
 }
 
-
-/**
- * Resets the page to homepage state showing default content
- * Fetches homepage content and updates the results section
- * Shows loading state during the transition
- */
+// Reset to homepage state
 function resetToHomepage() {
     showLoadingState();
     
@@ -220,4 +188,4 @@ function resetToHomepage() {
         .finally(() => {
             hideLoadingState();
         });
-};
+}
