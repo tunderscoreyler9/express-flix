@@ -121,8 +121,40 @@ app.get('/actor/:id', async (req, res) => {
         const actorId = req.params.id;
         // Get the search query from the referrer or the query paramter itself
         const searchQuery = req.query.from || '';
-    }
-    catch (error) {
+
+        // Fetch actor data in parallel for best performance:
+        const [actorResponse, creditsResponse, imagesResponse] = await Promise.all([
+            // Actor's actor details
+            axios.get(`https://api.themoviedb.org/3/person/${actorId}?api_key=${process.env.TMDB_API_KEY}`),
+
+            // Actor's movie credits
+            axios.get(`https://api.themoviedb.org/3/person/${actorId}/combined_credits?api_key=${process.env.TMDB_API_KEY}`),
+
+            // Actor's images
+            axios.get(`https://api.themoviedb.org/3/person/${actorId}/images?api_key=${process.env.TMDB_API_KEY}`)
+        ]);
+
+        // Combine all data for easy access in the template:
+        const actorData = {
+            ...actorResponse.data,
+            credits: creditsResponse.data,
+            images: imagesResponse.data,
+            // Calculate the actor's age if their bday is posted
+            age: actorResponse.data.birthday ? calculateAge(new Date(actorResponse.data/birthday)) : null
+        };
+
+        // Categorise movies by popularity, with the most popular first:
+        actorData.credits.cast = actorData.credits.cast.sort((a, b) =>
+            b.popularity - a.popularity
+        );
+
+        res.render('actor-details', {
+            actor: actorData,
+            searchQuery, // Pass the query to the ejs template
+            title: `${actorData.name} - Actor Details`
+        });
+
+    } catch (error) {
         console.error("Error fethcing actor details:", error);
         res.status(404).render('error', {
             message: "Actor not found or error occurred",
