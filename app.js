@@ -85,6 +85,13 @@ app.get('/movie/:id', async (req, res) => {
         // Get the search query from the referrer or query parameter
         const searchQuery = req.query.from || '';
         
+        // Handle case where the movieId might be undefined or not a valid number
+        if (!movieId || isNaN(Number(movieId))) {
+            throw new Error('Invalid movie ID');
+        }
+
+        console.log(`Fetching movie with ID: ${movieId}`);
+        
         // Fetch basic movie details
         const movieUrl = `https://api.themoviedb.org/3/movie/${movieId}?api_key=${process.env.TMDB_API_KEY}`;
         const movieResponse = await axios.get(movieUrl);
