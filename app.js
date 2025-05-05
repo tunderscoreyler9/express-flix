@@ -174,6 +174,15 @@ app.get('/actor/:id', async (req, res) => {
     }
 });
 
+// Route for fetching TV Shows:
+app.get('/tv/:id', async (req, res) => {
+    try {
+
+    } catch {
+
+    }
+});
+
 // Helper function to calculate age
 function calculateAge(birthday) {
     const ageDifMs = Date.now() - birthday.getTime();
